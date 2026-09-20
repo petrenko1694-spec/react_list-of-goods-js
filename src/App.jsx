@@ -15,73 +15,83 @@ export const goodsFromServer = [
   'Jam',
   'Garlic',
 ];
+const sortButtons = [
+  { id: 'alphabet', label: 'Sort alphabetically', color: 'is-info' },
+  { id: 'length', label: 'Sort by length', color: 'is-success' },
+];
 
 export const App = () => {
-  const buttons = ['Sort alphabetically', 'Sort by length', 'Reverse', 'Reset'];
-  const mods = ['is-info', 'is-success', 'is-warning', 'is-danger'];
-  const [sortField, setSortField] = useState('');
+  const [sortField, setSortField] = useState(null);
   const [isReversed, setIsReversed] = useState(false);
 
-  let visibleGoods = [...goodsFromServer].sort((good1, good2) => {
-    switch (sortField) {
-      case 'Sort alphabetically':
-        return good1.localeCompare(good2);
-      case 'Sort by length':
-        return good1.length - good2.length;
-      default:
-        return 0;
+  function getVisibleGoods() {
+    const goods = [...goodsFromServer];
+
+    if (sortField === 'alphabet') {
+      goods.sort((a, b) => a.localeCompare(b));
     }
-  });
 
-  if (isReversed) {
-    visibleGoods = visibleGoods.toReversed();
-  }
-
-  if (sortField === 'Reset') {
-    visibleGoods = [...goodsFromServer];
-  }
-
-  function buttonClick(button) {
-    switch (button) {
-      case 'Reset':
-        setSortField('');
-        setIsReversed(false);
-        break;
-
-      case 'Reverse':
-        setIsReversed(prev => !prev);
-        break;
-
-      default:
-        setSortField(button);
-        break;
+    if (sortField === 'length') {
+      goods.sort((a, b) => a.length - b.length);
     }
+
+    if (isReversed) {
+      goods.reverse();
+    }
+
+    return goods;
   }
+
+  const visibleGoods = getVisibleGoods();
+
+  const handleSort = field => {
+    setSortField(field);
+  };
+
+  const handleReverse = () => {
+    setIsReversed(prev => !prev);
+  };
+
+  const handleReset = () => {
+    setSortField(null);
+    setIsReversed(false);
+  };
+
+  const isResetVisible = sortField !== null || isReversed;
 
   return (
     <div className="section content">
       <div className="buttons">
-        {buttons.map((button, i) => {
-          const isSelected =
-            button === 'Reverse' ? isReversed : button === sortField;
+        {sortButtons.map(({ id, label, color }) => (
+          <button
+            key={id}
+            type="button"
+            className={cn('button', color, {
+              'is-light': sortField !== id,
+            })}
+            onClick={() => handleSort(id)}
+          >
+            {label}
+          </button>
+        ))}
 
-          if (button === 'Reset' && !(sortField || isReversed)) {
-            return null;
-          }
+        <button
+          type="button"
+          className={cn('button is-warning', { 'is-light': !isReversed })}
+          onClick={handleReverse}
+        >
+          Reverse
+        </button>
 
-          return (
-            <button
-              key={button}
-              type="button"
-              className={cn('button', mods[i], { 'is-light': !isSelected })}
-              onClick={() => {
-                buttonClick(button);
-              }}
-            >
-              {button}
-            </button>
-          );
-        })}
+        {isResetVisible && (
+          <button
+            type="button"
+            className="button is-danger"
+            onClick={handleReset}
+          >
+            Reset
+          </button>
+        )}
       </div>
 
       <ul>
